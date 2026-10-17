@@ -1,0 +1,56 @@
+# Local test of all images before pushing: docker compose up --build
+# Open http://localhost:8080
+services:
+  mongo:
+    image: mongo:6.0
+    volumes: [mongo-data:/data/db]
+
+  user-service:
+    build: ./backend/user-service
+    image: ecommerce-user-service:local
+    environment:
+      PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_users
+      JWT_SECRET: local-secret
+    ports: ["3001:3001"]
+    depends_on: [mongo]
+
+  product-service:
+    build: ./backend/product-service
+    image: ecommerce-product-service:local
+    environment:
+      PORT: 3002
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_products
+    ports: ["3002:3002"]
+    depends_on: [mongo]
+
+  cart-service:
+    build: ./backend/cart-service
+    image: ecommerce-cart-service:local
+    environment:
+      PORT: 3003
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_carts
+      PRODUCT_SERVICE_URL: http://product-service:3002
+    ports: ["3003:3003"]
+    depends_on: [mongo]
+
+  order-service:
+    build: ./backend/order-service
+    image: ecommerce-order-service:local
+    environment:
+      PORT: 3004
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_orders
+      CART_SERVICE_URL: http://cart-service:3003
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      USER_SERVICE_URL: http://user-service:3001
+    ports: ["3004:3004"]
+    depends_on: [mongo]
+
+  frontend:
+    build: ./frontend
+    image: ecommerce-frontend:local
+    ports: ["8080:80"]
+    depends_on: [user-service, product-service, cart-service, order-service]
+
+volumes:
+  mongo-data:

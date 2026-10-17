@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in
+dockerhub_username = "your-dockerhub-username"
+image_tag          = "v1"
+aws_region         = "ap-south-1"
+# key_name         = "my-keypair"      # optional, for SSH
+# ssh_cidr         = "1.2.3.4/32"      # optional, your public IP

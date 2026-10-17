@@ -1,0 +1,26 @@
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+ARG REACT_APP_USER_SERVICE_URL=http://localhost:3001
+ARG REACT_APP_PRODUCT_SERVICE_URL=http://localhost:3002
+ARG REACT_APP_CART_SERVICE_URL=http://localhost:3003
+ARG REACT_APP_ORDER_SERVICE_URL=http://localhost:3004
+ENV REACT_APP_USER_SERVICE_URL=$REACT_APP_USER_SERVICE_URL
+ENV REACT_APP_PRODUCT_SERVICE_URL=$REACT_APP_PRODUCT_SERVICE_URL
+ENV REACT_APP_CART_SERVICE_URL=$REACT_APP_CART_SERVICE_URL
+ENV REACT_APP_ORDER_SERVICE_URL=$REACT_APP_ORDER_SERVICE_URL
+
+COPY package.json ./
+RUN npm install
+
+COPY public ./public
+COPY src ./src
+# The bundled CRA Jest config rejects its own jest/globals environment.
+RUN DISABLE_ESLINT_PLUGIN=true npm run build
+
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
